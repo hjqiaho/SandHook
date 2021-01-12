@@ -68,7 +68,7 @@ public class HookWrapper {
                 if (TextUtils.equals(hookEntity.isCtor() ? "<init>" : hookEntity.target.getName(), hookMethodBackup.value()) && samePars(classLoader, field, hookEntity.pars)) {
                     field.setAccessible(true);
                     if (hookEntity.backup == null) {
-                        hookEntity.backup = BackupMethodStubs.getStubMethod();
+                        hookEntity.backup = StubMethodsFactory.getStubMethod();
                         hookEntity.hookIsStub = true;
                         hookEntity.resolveDexCache = false;
                     }
@@ -409,6 +409,7 @@ public class HookWrapper {
         public boolean hookIsStub = false;
         public boolean resolveDexCache = true;
         public boolean backupIsStub = true;
+        public boolean initClass = true;
 
         public Class[] pars;
         public int hookMode;

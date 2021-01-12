@@ -13,6 +13,10 @@ extern bool DEBUG;
 using namespace art::mirror;
 using namespace SandHook;
 
+// Non-intrinsics: Caches whether we can use fast-path in the interpreter invokes.
+// Intrinsics: These bits are part of the intrinsic ordinal.
+static constexpr uint32_t kAccFastInterpreterToInterpreterInvoke = 0x40000000;  // method.
+
 void ArtMethod::tryDisableInline() {
     if (SDK_INT < ANDROID_O)
         return;
@@ -22,9 +26,17 @@ void ArtMethod::tryDisableInline() {
 }
 
 void ArtMethod::disableInterpreterForO() {
-    if (SDK_INT >= ANDROID_O && DEBUG) {
+    if (SDK_INT >= ANDROID_O && SDK_INT < ANDROID_R && DEBUG) {
         setNative();
     }
+}
+
+void ArtMethod::disableFastInterpreterForQ() {
+    if (SDK_INT < ANDROID_Q)
+        return;
+    uint32_t accessFlag = getAccessFlags();
+    accessFlag &= ~kAccFastInterpreterToInterpreterInvoke;
+    setAccessFlags(accessFlag);
 }
 
 void ArtMethod::disableCompilable() {
@@ -106,11 +118,15 @@ void* ArtMethod::getQuickCodeEntry() {
 }
 
 void* ArtMethod::getInterpreterCodeEntry() {
-    return CastArtMethod::entryPointFormInterpreter->get(this);
+    return CastArtMethod::entryPointFromInterpreter->get(this);
 }
 
 GCRoot ArtMethod::getDeclaringClass() {
     return CastArtMethod::declaringClass->get(this);
+}
+
+uint16_t ArtMethod::getHotnessCount() {
+    return CastArtMethod::hotnessCount->get(this);
 }
 
 void ArtMethod::setQuickCodeEntry(void *entry) {
@@ -118,10 +134,11 @@ void ArtMethod::setQuickCodeEntry(void *entry) {
 }
 
 void ArtMethod::setJniCodeEntry(void *entry) {
+    CastArtMethod::entryPointFromJNI->set(this, entry);
 }
 
 void ArtMethod::setInterpreterCodeEntry(void *entry) {
-    CastArtMethod::entryPointFormInterpreter->set(this, entry);
+    CastArtMethod::entryPointFromInterpreter->set(this, entry);
 }
 
 void ArtMethod::setDexCacheResolveList(void *list) {
@@ -134,6 +151,10 @@ void ArtMethod::setDexCacheResolveItem(uint32_t index, void* item) {
 
 void ArtMethod::setDeclaringClass(GCRoot classPtr) {
     CastArtMethod::declaringClass->set(this, classPtr);
+}
+
+void ArtMethod::setHotnessCount(uint16_t count) {
+    CastArtMethod::hotnessCount->set(this, count);
 }
 
 bool ArtMethod::compile(JNIEnv* env) {
@@ -164,7 +185,7 @@ bool ArtMethod::deCompile() {
 }
 
 void ArtMethod::flushCache() {
-    flushCacheExt(reinterpret_cast<Size>(this), size());
+//    flushCacheExt(reinterpret_cast<Size>(this), size());
 }
 
 void ArtMethod::backup(ArtMethod *backup) {

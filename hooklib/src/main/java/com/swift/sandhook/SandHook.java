@@ -4,6 +4,7 @@ import android.os.Build;
 
 import com.swift.sandhook.annotation.HookMode;
 import com.swift.sandhook.blacklist.HookBlackList;
+import com.swift.sandhook.utils.ClassStatusUtils;
 import com.swift.sandhook.utils.FileUtils;
 import com.swift.sandhook.utils.ReflectionUtils;
 import com.swift.sandhook.utils.Unsafe;
@@ -90,8 +91,16 @@ public class SandHook {
         if (HookBlackList.canNotHook(target))
             throw new HookErrorException("method <" + entity.target.toString() + "> can not hook, because of in blacklist!");
 
-        resolveStaticMethod(target);
+
+        if (SandHookConfig.delayHook && PendingHookHandler.canWork() && ClassStatusUtils.isStaticAndNoInited(entity.target)) {
+            PendingHookHandler.addPendingHook(entity);
+            return;
+        } else if (entity.initClass) {
+            resolveStaticMethod(target);
+        }
+
         resolveStaticMethod(backup);
+
         if (backup != null && entity.resolveDexCache) {
             SandHookMethodResolver.resolveMethod(hook, backup);
         }
@@ -193,17 +202,21 @@ public class SandHook {
         }
     }
 
-    public static void resolveStaticMethod(Member method) {
+    public static boolean resolveStaticMethod(Member method) {
         //ignore result, just call to trigger resolve
         if (method == null)
-            return;
+            return true;
         try {
             if (method instanceof Method && Modifier.isStatic(method.getModifiers())) {
                 ((Method) method).setAccessible(true);
                 ((Method) method).invoke(new Object(), getFakeArgs((Method) method));
             }
+        } catch (ExceptionInInitializerError classInitError) {
+            //may need hook later
+            return false;
         } catch (Throwable throwable) {
         }
+        return true;
     }
 
     private static Object[] getFakeArgs(Method method) {
@@ -216,9 +229,10 @@ public class SandHook {
     }
 
     public static Object getObject(long address) {
-        long threadSelf = getThreadId();
-        if (address == 0 || threadSelf == 0)
+        if (address == 0) {
             return null;
+        }
+        long threadSelf = getThreadId();
         return getObjectNative(threadSelf, address);
     }
 
@@ -318,6 +332,26 @@ public class SandHook {
         }
     }
 
+    public static Object getJavaMethod(String className, String methodName) {
+        if (className == null)
+            return null;
+        Class clazz = null;
+        try {
+            clazz = Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
+        try {
+            return clazz.getDeclaredMethod(methodName);
+        } catch (NoSuchMethodException e) {
+            return null;
+        }
+    }
+
+    public static long getArtMethod(Member member) {
+        return SandHookMethodResolver.getArtMethod(member);
+    }
+
     public static boolean passApiCheck() {
         return ReflectionUtils.passApiCheck();
     }
@@ -327,7 +361,7 @@ public class SandHook {
         if (SandHookConfig.SDK_INT < Build.VERSION_CODES.N)
             return false;
         try {
-            File profile = new File("/data/misc/profiles/cur/" + SandHookConfig.curUse + "/" + selfPackageName + "/primary.prof");
+            File profile = new File("/data/misc/profiles/cur/" + SandHookConfig.curUser + "/" + selfPackageName + "/primary.prof");
             if (!profile.getParentFile().exists()) return false;
             try {
                 profile.delete();
@@ -362,6 +396,12 @@ public class SandHook {
     public static native boolean is64Bit();
 
     public static native boolean disableVMInline();
+
+    public static native boolean disableDex2oatInline(boolean disableDex2oat);
+
+    public static native boolean setNativeEntry(Member origin, Member hook, long nativeEntry);
+
+    public static native boolean initForPendingHook();
 
     @FunctionalInterface
     public interface HookModeCallBack {

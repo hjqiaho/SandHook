@@ -3,7 +3,8 @@ package com.swift.sandhook.xposedcompat;
 import android.app.Application;
 import android.content.Context;
 
-import com.swift.sandhook.xposedcompat.classloaders.ComposeClassLoader;
+import com.swift.sandhook.SandHookConfig;
+import com.swift.sandhook.xposedcompat.classloaders.ProxyClassLoader;
 import com.swift.sandhook.xposedcompat.methodgen.DynamicBridge;
 import com.swift.sandhook.xposedcompat.utils.ApplicationUtils;
 import com.swift.sandhook.xposedcompat.utils.FileUtils;
@@ -15,6 +16,8 @@ import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
+
+import static com.swift.sandhook.xposedcompat.utils.DexMakerUtils.MD5;
 
 public class XposedCompat {
 
@@ -74,15 +77,27 @@ public class XposedCompat {
         if (sandHookXposedClassLoader != null) {
             return sandHookXposedClassLoader;
         } else {
-            sandHookXposedClassLoader = new ComposeClassLoader(sandBoxHostClassLoader, appOriginClassLoader);
+            sandHookXposedClassLoader = new ProxyClassLoader(sandBoxHostClassLoader, appOriginClassLoader);
             return sandHookXposedClassLoader;
         }
     }
 
+    public static File getCacheDir() {
+        if (cacheDir == null) {
+            if (context == null) {
+                context = ApplicationUtils.currentApplication();
+            }
+            if (context != null) {
+                cacheDir = new File(context.getCacheDir(), MD5(processName != null ? processName : ProcessUtils.getProcessName(context)));
+            }
+        }
+        return cacheDir;
+    }
+
     public static boolean clearCache() {
         try {
-            FileUtils.delete(cacheDir);
-            cacheDir.mkdirs();
+            FileUtils.delete(getCacheDir());
+            getCacheDir().mkdirs();
             return true;
         } catch (Throwable throwable) {
             return false;

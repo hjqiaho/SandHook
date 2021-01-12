@@ -1,6 +1,6 @@
 # SandHook
-Android ART Hook
-
+- Android ART Hook
+- Native Inline Hook
 ## Version 
 
 [ ![Version](https://api.bintray.com/packages/ganyao114/maven/hooklib/images/download.svg) ](https://bintray.com/ganyao114/maven/hooklib/_latestVersion)
@@ -9,7 +9,11 @@ Android ART Hook
 
 [中文文档以及实现](https://github.com/ganyao114/SandHook/blob/master/doc/doc.md)
 
-[中文 Blog](https://blog.csdn.net/ganyao939543405/article/details/86661040)
+[中文 Blog](https://blog.csdn.net/ganyao939543405/article/details/86661040)  
+
+QQ Group：756071167  
+
+与 VirtualApp 相关的商业合作请联系 QQ939543405
 
 # arch support 
 
@@ -19,24 +23,29 @@ Android ART Hook
 
 # OS
 
-4.4(ART Runtime) - 10.0
+4.4(ART Runtime) - 11.0 dev-preview-1
 
-# Scope
+# Project Struct
 
-- Object Methods
-- Static Methods
-- Constructors
-- System Methods
-- JNI Methods
-
-hook abstract method is not recommended, you can invoke its impl method.
-
-cant hook if lined
+- annotation<br/>
+annotation api
+- hooklib<br/>
+core lib of art hook
+- nativehook<br/>
+lib of native hook
+- xposedcompat<br/>
+stable implement of xposed api compat for sandhook
+- xposedcompat_new<br/>
+annother implement of xposed api compat for sandhook(hook more fast first time)
+- hookers<br/>
+hook plugin demo for annotation api
 
 # how to use
 
 ```gradle
-implementation 'com.swift.sandhook:hooklib:3.1.0'
+implementation 'com.swift.sandhook:hooklib:4.2.0'
+// need for android 11
+implementation 'com.swift.sandhook:nativehook:4.2.0'
 ```
 
 ## Annotation API
@@ -113,7 +122,7 @@ SanHook.public static boolean hook(Member target, Method hook, Method backup) {}
 if hookers is in plugin(like xposed):  
 
 ```groovy
-provided 'com.swift.sandhook:hookannotation:3.1.0'
+provided 'com.swift.sandhook:hookannotation:4.2.0'
 ```
   
 in your plugin
@@ -125,18 +134,30 @@ backup method can call itself to avoid be inlining
 
 --------------------------------------------------------------------
 
-Now you can use Xposed api:  
+Now you can use Xposed api:
 
+We have two different implements:
 ```groovy
-implementation 'com.swift.sandhook:xposedcompat:3.1.0'
+//stable
+implementation 'com.swift.sandhook:xposedcompat:4.2.0'
+
+//or
+
+//hook fast first time
+implementation 'com.swift.sandhook:xposedcompat_new:4.2.0'
 ```
 
 ```java
+
 //setup for xposed
+//for xposed compat only(no need xposed comapt new)
 XposedCompat.cacheDir = getCacheDir();
+
+//for load xp module(sandvxp)
 XposedCompat.context = this;
 XposedCompat.classLoader = getClassLoader();
-XposedCompat.isFirstApplication= true;  
+XposedCompat.isFirstApplication= true;
+
 //do hook
 XposedHelpers.findAndHookMethod(Activity.class, "onResume", new XC_MethodHook() {
       @Override
@@ -156,29 +177,31 @@ XposedHelpers.findAndHookMethod(Activity.class, "onResume", new XC_MethodHook() 
 
 # Notice
 
-## Call Origin
+## Disable Inline
 
-!!!!!!!!  
-
-when OS >= 8.0
-you must call backup method in hook method, if you want call it in other method, please call  SandHook.compileMethod(otherMethod) before call backup method.
-    
-because when ART trigger JIT from profiling, JIT will invoke -> ResolveCompilingMethodsClass -> ClassLinker::ResolveMethod -> CheckIncompatibleClassChange -> ThrowIncompatibleClassChangeError finally!!!
-
-
-## Inline
-
-### disable JIT inline
+### JIT inline
 
 We can do nothing to prevent some methods been inlined before app start, but we can try to disable VM Jit Inline after launch.
 
 if you will hook some method that could be inlined, please call SandHook.disableVMInline()(OS >= 7.0) in Application.OnCreate()
 
+### Inline by dex2oat
 
-### Deoptimize
+#### Background dex2oat
+
+SandHook.tryDisableProfile(getPackageName());
+
+#### dex2oat by DexClassLoader
+
+SandHook.disableDex2oatInline(fullyDisableDex2oat);
+
+or
+
+ArtDexOptimizer.dexoatAndDisableInline to dex2oat manuly 
+
+### Deoptimize(Boot Image)
 
 You can also deoptimize a caller that inlined your hook method by SandHook.deCompile(caller), just implement >= 7.0
-
 
 ## Hidden API
 
@@ -186,6 +209,55 @@ SandHook.passApiCheck();
 
 To bypass hidden api on P & Q
 
+## Debuggable
+
+You must set debuggble of the target hook process before init when OS >= 8.0.  
+
+SandHookConfig.DEBUG = <Debuggable of target process>  
+
+# Native Hook
+
+## simple hook(no backup)
+#include "includes/sandhook.h"  
+
+bool nativeHookNoBackup(void* origin, void* hook);
+
+## need backup origin method
+#include "sandhook_native.h"  
+
+void* SandInlineHook(void* origin, void* replace);  
+
+void* SandInlineHookSym(const char* so, const char* symb, void* replace);  
+
+
+return is backup method
+
+## break point
+
+you can insert a break point in body of method(not only start of method), so you can read/write registers in break point.  
+
+
+bool SandBreakPoint(void* origin, void (*callback)(REG[]));  
+
+bool SandSingleInstBreakPoint(void *origin, BreakCallback(callback));
+
+## short method 
+
+#include "sandhook_native.h"  
+
+void* SandSingleInstHook(void* origin, void* replace);  
+
+void* SandSingleInstHookSym(const char* so, const char* symb, void* replace);  
+
+use it when your method is <= 16bytes(64bit)/8bytes(32bit)  
+
+SandSingleInstHook only need 4bytes length
+
+
+## more
+
+- disassembler (only implement important instructions)
+- assembler (only implement important instructions)
 
 # Demo
 
@@ -201,7 +273,7 @@ Unofficial xposed framework >= 8.0
 
 See release above
 
-https://github.com/ElderDrivers/EdXposed/tree/sandhook
+https://github.com/ElderDrivers/EdXposed
 
 # Android Q(10.0)
 

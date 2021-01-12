@@ -7,12 +7,12 @@
 
 #define BYTE_POINT sizeof(void*)
 
+typedef size_t Size;
+
 //32bit
 #if defined(__i386__) || defined(__arm__)
-#define Size uint32_t
 //64bit
 #elif defined(__aarch64__) || defined(__x86_64__)
-#define Size uint64_t
 #else
 #endif
 
@@ -42,7 +42,7 @@ static void clearCacheArm32(char* begin, char *end)
 #define ANDROID_O 26
 #define ANDROID_O2 27
 #define ANDROID_P 28
-//could not 29
 #define ANDROID_Q 29
+#define ANDROID_R 30
 
 #endif //SANDHOOK_ARCH_H
