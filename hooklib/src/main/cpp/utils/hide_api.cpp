@@ -7,6 +7,7 @@
 #include "../includes/log.h"
 #include "../includes/utils.h"
 #include "../includes/trampoline_manager.h"
+#include "../../../../../nativehook/src/main/cpp/sandhook_native.h"
 
 extern int SDK_INT;
 
@@ -145,6 +146,7 @@ extern "C" {
         }
 
         //init native hook lib
+#if 0
         void* native_hook_handle = dlopen("libsandhook-native.so", RTLD_LAZY | RTLD_GLOBAL);
         if (native_hook_handle) {
             hook_native = reinterpret_cast<void *(*)(void *, void *)>(dlsym(native_hook_handle, "SandInlineHook"));
@@ -152,6 +154,8 @@ extern "C" {
             hook_native = reinterpret_cast<void *(*)(void *, void *)>(getSymCompat(
                     "libsandhook-native.so", "SandInlineHook"));
         }
+#endif
+        hook_native = SandInlineHook;
 
         if (SDK_INT >= ANDROID_R && hook_native) {
             const char *symbol_decode_method = sizeof(void*) == 8 ? "_ZN3art3jni12JniIdManager15DecodeGenericIdINS_9ArtMethodEEEPT_m" : "_ZN3art3jni12JniIdManager15DecodeGenericIdINS_9ArtMethodEEEPT_j";
