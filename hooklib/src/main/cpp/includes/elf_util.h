@@ -5,6 +5,7 @@
 #define SANDHOOK_ELF_UTIL_H
 
 #include <linux/elf.h>
+#include <memory>
 
 #if defined(__LP64__)
 typedef Elf64_Ehdr Elf_Ehdr;

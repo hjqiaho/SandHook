@@ -37,6 +37,7 @@ set(${PROJECT_NAME}_SOURCES
         trampoline/trampoline_manager.cpp
         utils/dlfcn_nougat.cpp
         utils/hide_api.cpp
+        utils/classlinker_offset_helper.cpp
         utils/utils.cpp
         utils/offset.cpp
         utils/elf_util.cpp
