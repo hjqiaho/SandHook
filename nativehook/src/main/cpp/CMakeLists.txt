@@ -102,3 +102,7 @@ target_link_libraries( # Specifies the target library.
 add_definitions(-std=c++11)
 
 ENABLE_LANGUAGE(ASM)
+
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os -Wall -s")
+
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os -Wall -s")

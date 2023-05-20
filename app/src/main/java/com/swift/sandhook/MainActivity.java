@@ -15,6 +15,14 @@ import com.swift.sandhook.test.Inter;
 import com.swift.sandhook.test.InterImpl;
 import com.swift.sandhook.test.PendingHookTest;
 import com.swift.sandhook.test.TestClass;
+import com.swift.sandhook.testHookers.ActivityHooker;
+import com.swift.sandhook.testHookers.CtrHook;
+import com.swift.sandhook.testHookers.CustmizeHooker;
+import com.swift.sandhook.testHookers.JniHooker;
+import com.swift.sandhook.testHookers.LogHooker;
+import com.swift.sandhook.testHookers.NewAnnotationApiHooker;
+import com.swift.sandhook.testHookers.ObjectHooker;
+import com.swift.sandhook.wrapper.HookErrorException;
 
 import java.lang.reflect.Field;
 
@@ -35,8 +43,29 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                try {
+                    Log.e("MyApp", "addHookClass beigin ");
+                    SandHook.addHookClass(JniHooker.class,
+                            CtrHook.class,
+                            LogHooker.class,
+                            CustmizeHooker.class,
+                            ActivityHooker.class,
+                            ObjectHooker.class,
+                            NewAnnotationApiHooker.class);
+                    Log.e("MyApp", "addHookClass end ");
+
+                    final TestClass str = new TestClass(1);
+
+                    str.add1();
+                    str.add2();
+                    str.testNewHookApi(MainActivity.this, 1);
+                    Log.e("MyApp", "addHookClass end TestClass add1 add2");
+
+                } catch (HookErrorException e) {
+                    e.printStackTrace();
+                    Log.e("MyApp", "addHookClass e = "+e);
+                }
+
             }
         });
 
@@ -54,42 +83,42 @@ public class MainActivity extends AppCompatActivity {
         // Example of a call to a native method
         TextView tv = (TextView) findViewById(R.id.sample_text);
 
-        final TestClass str = new TestClass(1);
-
-        str.add1();
-        str.add2();
-        str.testNewHookApi(this, 1);
-
-        str.jni_test();
-
-        Log.e("dd", str.a + "");
-
-        inter = new InterImpl();
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                inter.dosth();
-                inter = new Inter() {
-                    @Override
-                    public void dosth() {
-                        Log.e("dosth", hashCode() + "");
-                    }
-                };
-                Log.e("testStub", "res = " + testStub(str, 1, "origin b", false, 'x', "origin e"));
-            }
-        }).start();
-
-        inter.dosth();
-
-        testPluginHook(str);
-
-        MyApp.initedTest = true;
-        try {
-            PendingHookTest.test();
-        } catch (Throwable e) {
-
-        }
+//        final TestClass str = new TestClass(1);
+//
+//        str.add1();
+//        str.add2();
+//        str.testNewHookApi(this, 1);
+//
+//        str.jni_test();
+//
+//        Log.e("dd", str.a + "");
+//
+//        inter = new InterImpl();
+//
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                inter.dosth();
+//                inter = new Inter() {
+//                    @Override
+//                    public void dosth() {
+//                        Log.e("dosth", hashCode() + "");
+//                    }
+//                };
+//                Log.e("testStub", "res = " + testStub(str, 1, "origin b", false, 'x', "origin e"));
+//            }
+//        }).start();
+//
+//        inter.dosth();
+//
+//        testPluginHook(str);
+//
+//        MyApp.initedTest = true;
+//        try {
+//            PendingHookTest.test();
+//        } catch (Throwable e) {
+//
+//        }
     }
 
     public static Field getField(Class topClass, String fieldName) throws NoSuchFieldException {

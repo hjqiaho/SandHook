@@ -41,7 +41,7 @@ public class CtrHook {
         try {
             SandHook.callOriginByBackup(add1backup, thiz);
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e("TestClassHook", "add1 Exception Exception Exception Exception");
         }
     }
 
