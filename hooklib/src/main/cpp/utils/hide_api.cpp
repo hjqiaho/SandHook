@@ -7,7 +7,10 @@
 #include "../includes/log.h"
 #include "../includes/utils.h"
 #include "../includes/trampoline_manager.h"
+#include "../../../../../nativehook/src/main/cpp/sandhook_native.h"
 #include "../includes/art_runtime.h"
+#include "../includes/offset.h"
+#include "../includes/classlinker_offset_helper.h"
 
 extern int SDK_INT;
 
@@ -154,6 +157,7 @@ extern "C" {
         }
 
         //init native hook lib
+#if 0
         void* native_hook_handle = dlopen("libsandhook-native.so", RTLD_LAZY | RTLD_GLOBAL);
         if (native_hook_handle) {
             hook_native = reinterpret_cast<void *(*)(void *, void *)>(dlsym(native_hook_handle, "SandInlineHook"));
@@ -161,6 +165,8 @@ extern "C" {
             hook_native = reinterpret_cast<void *(*)(void *, void *)>(getSymCompat(
                     "libsandhook-native.so", "SandInlineHook"));
         }
+#endif
+        hook_native = SandInlineHook;
 
         if (SDK_INT >= ANDROID_R && hook_native) {
             const char *symbol_decode_method = sizeof(void*) == 8 ? "_ZN3art3jni12JniIdManager15DecodeGenericIdINS_9ArtMethodEEEPT_m" : "_ZN3art3jni12JniIdManager15DecodeGenericIdINS_9ArtMethodEEEPT_j";
@@ -340,13 +346,12 @@ extern "C" {
         backup_update_methods_code(thiz, artMethod, quick_code);
     }
 
-    void MakeInitializedClassVisibilyInitialized(void* self){
-        if(make_initialized_classes_visibly_initialized_) {
-#ifdef __LP64__
-            constexpr size_t OFFSET_classlinker = 472;
-#else
-            constexpr size_t OFFSET_classlinker = 276;
-#endif
+    void MakeInitializedClassVisibilyInitialized(JNIEnv *env, void* self){
+        if(make_initialized_classes_visibly_initialized_ && SDK_INT >= ANDROID_R) {
+            JavaVM *jvm_ = nullptr;
+            env->GetJavaVM(&jvm_);
+
+            int OFFSET_classlinker = SearchClassLinkerOffset(jvm_, runtime_instance_, art_lib_path);
             void *thiz = *reinterpret_cast<void **>(
                     reinterpret_cast<size_t>(runtime_instance_) + OFFSET_classlinker);
             make_initialized_classes_visibly_initialized_(thiz, self, true);
