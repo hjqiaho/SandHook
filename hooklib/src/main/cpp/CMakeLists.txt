@@ -92,3 +92,8 @@ add_library(${PROJECT_NAME}
         ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(${PROJECT_NAME} log)
+
+
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os -Wall -s")
+
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os -Wall -s")
