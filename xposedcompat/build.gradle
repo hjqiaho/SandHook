@@ -32,13 +32,17 @@ dependencies {
     compileOnly project(':hooklib')
 }
 
-afterEvaluate {
-    android.libraryVariants.each {variant->
-        publishing.publications.create(variant.name,MavenPublication){
-            from components.findByName(variant.name)
-            groupId = 'com.github.hjqiaho.SandHook'//自定义
-            artifactId = 'xposedcompat'//自定义
-            version = '4.2.0.002'//自定义
+group = 'com.github.hjqiaho'
+version = '4.2.0.004' // 版本号，与 GitHub 标签一致
+
+publishing {
+    publications {
+        create("mavenRelease", MavenPublication) {
+            from components.findByName("release")
+
+            groupId = 'com.github.hjqiaho'
+            artifactId = 'xposedcompat'
+            version = '4.2.0.004'
         }
     }
 }
