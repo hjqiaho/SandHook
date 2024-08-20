@@ -1,6 +1,5 @@
 plugins {
     id 'java-library'
-    id 'maven-publish'
 }
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
@@ -12,13 +11,4 @@ targetCompatibility = "1.7"
 ext {
     bintrayRepo = 'maven'
     bintrayName = 'swift-sandhook-annotation'
-}
-
-afterEvaluate {
-    publishing.publications.create('mavenJava', MavenPublication) {
-        from components.java
-        groupId = 'com.github.hjqiaho.SandHook'//自定义
-        artifactId = 'annotation'//自定义
-        version = '4.2.0.002'//自定义
-    }
 }
