@@ -1,13 +1,17 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+apply plugin: 'mukun-uploadlibrary'
 
 buildscript {
     
     repositories {
         google()
         jcenter()
+        mukunCloud()
+
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.0'
+        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath 'com.mukun.pluginlibrary:uploadlibary:1.0.7'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -18,6 +22,7 @@ allprojects {
     repositories {
         google()
         jcenter()
+        mukunCloud()
     }
     tasks.withType(Javadoc) {
         options.addStringOption('Xdoclint:none', '-quiet')

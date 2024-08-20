@@ -1,6 +1,5 @@
 plugins {
     id 'com.android.library'
-    id 'maven-publish'
 }
 android {
     compileSdkVersion 28
@@ -33,24 +32,14 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
+    mavenPublish {
+        version = '4.2.0.005'
+        groupId = 'com.fundot.lib'
+        artifactId = 'hooklib'
+    }
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     api project(':annotation')
-}
-group = 'com.github.hjqiaho'
-version = '4.2.0.004' // 版本号，与 GitHub 标签一致
-
-publishing {
-    publications {
-        create("mavenRelease", MavenPublication) {
-            from components.findByName("release")
-
-            groupId = 'com.github.hjqiaho'
-            artifactId = 'hooklib'
-            version = '4.2.0.004'
-        }
-    }
 }
