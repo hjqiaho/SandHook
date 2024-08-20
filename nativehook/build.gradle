@@ -1,5 +1,6 @@
 plugins {
     id 'com.android.library'
+    id 'maven-publish'
 }
 android {
     compileSdkVersion 28
@@ -35,13 +36,23 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    mavenPublish {
-        version = '4.2.0.005'
-        groupId = 'com.fundot.lib'
-        artifactId = 'nativehook'
-    }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+}
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = 'com.github.hjqiaho.SandHook'
+            artifactId = 'nativehook'
+            version = '4.2.0.006'
+            from components.findByName("release")
+        }
+    }
+    repositories {
+        maven {
+            url = uri('https://jitpack.io')
+        }
+    }
 }

@@ -1,5 +1,6 @@
 plugins {
     id 'com.android.library'
+    id 'maven-publish'
 }
 android {
     compileSdkVersion 28
@@ -29,4 +30,19 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.jakewharton.android.repackaged:dalvik-dx:9.0.0_r3'
     compileOnly project(':hooklib')
+}
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = 'com.github.hjqiaho.SandHook'
+            artifactId = 'xposedcompat'
+            version = '4.2.0.006'
+            from components.findByName("release")
+        }
+    }
+    repositories {
+        maven {
+            url = uri('https://jitpack.io')
+        }
+    }
 }
