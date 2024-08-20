@@ -1,5 +1,7 @@
-apply plugin: 'com.android.library'
-
+plugins {
+    id 'com.android.library'
+    id 'maven-publish'
+}
 android {
     compileSdkVersion 28
 
@@ -37,5 +39,16 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     api project(':annotation')
+}
+
+afterEvaluate {
+    android.libraryVariants.each {variant->
+        publishing.publications.create(variant.name,MavenPublication){
+            from components.findByName(variant.name)
+            groupId = 'com.github.hjqiaho.SandHook'//自定义
+            artifactId = 'hooklib'//自定义
+            version = '4.2.0.002'//自定义
+        }
+    }
 }
 
