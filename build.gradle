@@ -3,6 +3,7 @@
 buildscript {
     
     repositories {
+        maven { url 'https://jitpack.io' }
         maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
         google()
         mavenCentral()
@@ -20,6 +21,7 @@ buildscript {
 
 allprojects {
     repositories {
+        maven { url 'https://jitpack.io' }
         google()
         mavenCentral()
         maven { url 'https://maven.aliyun.com/repository/public' }
@@ -30,15 +32,6 @@ allprojects {
     }
 }
 
-ext {
-    versionName = "5.0.1"
-    groupId = 'io.github.burstoverflow'
-    description = 'SandHook Revision'
-    gitUrl = 'https://github.com/burst-overflow/SandHook'
-    authorEmail = 'burstoverflow@gmail.com'
-    license = 'Apache-2.0'
-    publishDependencies = ['hooklib': ["${groupId}:hookannotation:${versionName}", "${groupId}:xposedcompat:${versionName}"]]
-}
 
 task clean(type: Delete) {
     delete rootProject.buildDir

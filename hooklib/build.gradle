@@ -44,5 +44,3 @@ dependencies {
     api project(':annotation')
     api 'com.bytedance.android:shadowhook:1.0.8'
 }
-
-apply from: '../publish.gradle'
